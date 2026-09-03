@@ -1472,6 +1472,95 @@
       <div id="dv-result" style="margin-top:16px; display:none;"></div>
     </div>
 
+    <!-- ═══════════ PAGE: Mandate (eNACH) ═══════════ -->
+    <div class="page" id="page-mandate">
+      <div class="page-header"><h2>Mandate</h2><p>Create eNACH auto-debit mandates and track authorization status</p></div>
+
+      <!-- sub-view toggle -->
+      <div role="tablist" style="display:flex;background:#f1f5f9;padding:4px;border-radius:10px;max-width:600px;gap:4px;margin-bottom:18px;">
+        <button type="button" role="tab" id="mandate-view-send-btn" onclick="switchMandateView('send')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:0;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;background:#fff;color:#1e40af;box-shadow:0 1px 2px rgba(15,23,42,0.08);transition:all 0.15s;">
+          <i class="fa-solid fa-paper-plane"></i> Send Mandate
+        </button>
+        <button type="button" role="tab" id="mandate-view-status-btn" onclick="switchMandateView('status')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:0;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:#64748b;transition:all 0.15s;">
+          <i class="fa-solid fa-magnifying-glass-chart"></i> Mandate Status
+        </button>
+        <button type="button" role="tab" id="mandate-view-list-btn" onclick="switchMandateView('list')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:0;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:#64748b;transition:all 0.15s;">
+          <i class="fa-solid fa-list-check"></i> All Mandates
+        </button>
+      </div>
+
+      <!-- ── SEND MANDATE ── -->
+      <div id="mandate-send-view">
+        <div class="card" style="max-width:640px;">
+          <div class="card-title"><div class="icon"><i class="fa-solid fa-file-signature"></i></div> New Mandate</div>
+
+          <div class="field"><label>Customer Name</label><input type="text" id="m-name" placeholder="e.g. Ramesh Kumar" /></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="field"><label>Email</label><input type="email" id="m-email" placeholder="name@example.com" /></div>
+            <div class="field"><label>Phone</label><input type="text" id="m-phone" placeholder="10-digit mobile" maxlength="10" inputmode="numeric" /></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="field"><label>Maximum Debit Amount (&#8377;)</label><input type="number" id="m-max-amount" placeholder="e.g. 20000" min="1" /></div>
+            <div class="field"><label>Plan Name <small style="color:#aaa;text-transform:none;">(optional)</small></label><input type="text" id="m-plan-name" placeholder="Loan Repayment Mandate" /></div>
+          </div>
+
+          <div class="field"><label>Notify Customer Via</label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;">
+              <label style="display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;text-transform:none;letter-spacing:normal;font-weight:500;color:var(--ink);margin:0;">
+                <input type="checkbox" class="m-notify" value="EMAIL" checked style="width:auto;padding:0;margin:0;accent-color:var(--blue);"> Email
+              </label>
+              <label style="display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;text-transform:none;letter-spacing:normal;font-weight:500;color:var(--ink);margin:0;">
+                <input type="checkbox" class="m-notify" value="SMS" checked style="width:auto;padding:0;margin:0;accent-color:var(--blue);"> SMS
+              </label>
+            </div>
+            <p style="font-size:11px;color:#94a3b8;margin-top:6px;text-transform:none;">Cashfree sends the customer an authorization link on the selected channels.</p>
+          </div>
+
+          <details style="margin-bottom:14px;">
+            <summary style="font-size:12px;color:#475569;cursor:pointer;font-weight:600;">Advanced (optional)</summary>
+            <div style="margin-top:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="field"><label>First Charge Date</label><input type="date" id="m-first-charge" /></div>
+                <div class="field"><label>Mandate Expiry Date</label><input type="date" id="m-expiry" /></div>
+              </div>
+              <div class="field"><label>Note</label><input type="text" id="m-note" placeholder="Internal note shown to customer" /></div>
+              <div class="field"><label>Subscription ID <small style="color:#aaa;text-transform:none;">(optional — auto-generated if blank)</small></label><input type="text" id="m-sub-id" placeholder="SUB-xxxxxxxx" /></div>
+            </div>
+          </details>
+
+          <button class="btn btn-blue" id="m-create-btn" onclick="createMandate()" style="width:100%;">
+            <i class="fa-solid fa-paper-plane btn-icon"></i> Create &amp; Send Mandate
+          </button>
+          <div id="m-create-result" style="margin-top:16px; display:none;"></div>
+        </div>
+      </div>
+
+      <!-- ── MANDATE STATUS ── -->
+      <div id="mandate-status-view" style="display:none;">
+        <div class="card" style="max-width:640px;">
+          <div class="card-title"><div class="icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div> Check Mandate Status</div>
+          <div class="field"><label>Subscription ID</label><input type="text" id="m-status-id" placeholder="e.g. SUB-a1b2c3d4e5f6" /></div>
+          <button class="btn btn-blue" id="m-status-btn" onclick="checkMandateStatus()" style="width:100%;">
+            <i class="fa-solid fa-magnifying-glass btn-icon"></i> Check Status
+          </button>
+          <div id="m-status-result" style="margin-top:16px; display:none;"></div>
+        </div>
+      </div>
+
+      <!-- ── ALL MANDATES ── -->
+      <div id="mandate-list-view" style="display:none;">
+        <div class="card" style="max-width:900px;">
+          <div class="card-title"><div class="icon"><i class="fa-solid fa-list-check"></i></div> All Mandates</div>
+          <div style="position:relative;margin-bottom:14px;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;pointer-events:none;"></i>
+            <input type="text" id="m-search" placeholder="Search by name or mobile number…" oninput="onMandateSearch(this.value)" style="width:100%;padding-left:38px;" />
+          </div>
+          <div id="m-list-body"><div style="padding:16px;color:#64748b;font-size:13px;">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════════ PAGE: Not Eligible Professions ═══════════ -->
     <div class="page" id="page-ineligible">
       <div class="page-header">
