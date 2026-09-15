@@ -1963,6 +1963,21 @@ function authHeaders(extra = {}) {
   return headers;
 }
 
+// Global 401 guard: expired/missing session on any API call forces re-login
+const _origFetch = window.fetch.bind(window);
+window.fetch = async function(url, opts) {
+  const res = await _origFetch(url, opts);
+  const path = typeof url === 'string' ? url : (url && url.url) || '';
+  if (res.status === 401 && (path.startsWith('/api/') || path === '/calculate') && !path.startsWith('/api/auth/')) {
+    sessionStorage.removeItem('jwt');
+    currentUser = null;
+    showLogin();
+    $('loginErrorMsg').textContent = 'Session expired. Please sign in again.';
+    $('loginError').classList.add('visible');
+  }
+  return res;
+};
+
 // ── Globals ──
 let AA = { token: '', consentHandle: '', consentId: '', custId: '', sessionId: '', csCurrentStep: 1, fiCurrentStep: 1, failedAccounts: [], pendingAccounts: [], readyAccounts: [], parentFailed: false };
 let fetchedAccounts = [];
@@ -2429,7 +2444,7 @@ function downloadOnePDF(acc, idx) {
   // Date range from transactions
   let dateFrom = '', dateTo = '';
   if (txns.length) {
-    const dates = txns.map(t => t.valueDate || t.transactionTimestamp || t.txnDate || '').filter(Boolean);
+    const dates = txns.map(t => t.transactionTimestamp || t.valueDate || t.txnDate || '').filter(Boolean);
     if (dates.length) { dateFrom = dates[0]; dateTo = dates[dates.length - 1]; }
   }
 
@@ -2469,7 +2484,7 @@ function downloadOnePDF(acc, idx) {
 
   // Transaction table
   const tableData = txns.map(txn => {
-    const date = txn.valueDate || txn.transactionTimestamp || txn.txnDate || '';
+    const date = txn.transactionTimestamp || txn.valueDate || txn.txnDate || '';
     const narration = txn.narration || txn.transactionNarration || txn.reference || '';
     const type = (txn.type || txn.txnType || '').toUpperCase();
     const amount = txn.amount || txn.transactionAmount || '';
@@ -2588,7 +2603,7 @@ function renderAccounts(accounts) {
       acc.transactions.forEach(txn => {
         const type = esc((txn.type || txn.txnType || '').toUpperCase());
         const cls = type === 'CREDIT' ? 'txn-type-credit' : 'txn-type-debit';
-        const date = txn.valueDate || txn.transactionTimestamp || txn.txnDate || '';
+        const date = txn.transactionTimestamp || txn.valueDate || txn.txnDate || '';
         const displayDate = date ? new Date(date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'2-digit' }) : '';
         const amount = txn.amount || txn.transactionAmount || '';
         const balance = txn.currentBalance || txn.balance || '';
